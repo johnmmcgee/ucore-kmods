@@ -8,16 +8,19 @@ ARG COREOS_VERSION="${COREOS_VERSION:-stable}"
 
 COPY build*.sh /tmp
 COPY certs /tmp/certs
-ADD files/etc/nvidia-container-runtime/config-rootless.toml \
-    /tmp/ublue-os-ucore-nvidia/rpmbuild/SOURCES/config-rootless.toml
 ADD ublue-os-ucore-nvidia.spec \
-    /tmp/ublue-os-ucore-nvidia/ublue-os-ucore-nvidia.spec
+        /tmp/ublue-os-ucore-nvidia/ublue-os-ucore-nvidia.spec
+ADD files/usr/lib/systemd/system/ublue-nvctk-cdi.service \
+        /tmp/ublue-os-ucore-nvidia/rpmbuild/SOURCES/ublue-nvctk-cdi.service
+ADD files/usr/lib/systemd/system-preset/70-ublue-nvctk-cdi.preset \
+        /tmp/ublue-os-ucore-nvidia/rpmbuild/SOURCES/70-ublue-nvctk-cdi.preset
+
 
 RUN /tmp/build-prep.sh
 
-RUN /tmp/build-kmod-nvidia.sh
 RUN /tmp/build-ublue-nvidia.sh
-RUN /tmp/build-kmod-zfs.sh
+RUN /tmp/build-kmod-nvidia.sh
+RUN ZFS_MINOR_VERSION=2.1 /tmp/build-kmod-zfs.sh
 
 RUN for RPM in $(find /var/cache/akmods/ -type f -name \*.rpm); do \
         cp "${RPM}" /var/cache/rpms/kmods/; \
